@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,46 +15,28 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class IDGeneratorService {
-
-    public static final int STEP = 10000;
-    Logger logger = LoggerFactory.getLogger(IDGeneratorService.class);
+    public static final int STEP = 1000;
+    public static final boolean SALT = false;
     @Autowired
-    LocalCacheService cacheService;
+    RedisCacheService cacheService;
     @Autowired
     IDRepository idRepository;
-    AtomicLong atomId = new AtomicLong(0);
+
+    private AtomicLong atomId = new AtomicLong(0);
     /**
      * 预取ID的最大值
      */
-    Long preGenerateMaxId = 0l;
+    private Long preGenerateMaxId = 1l;
+    private Logger logger = LoggerFactory.getLogger(IDGeneratorService.class);
 
     public synchronized long generator(String name) {
         //如果没有达到预取的最大值，直接使用atomic加1
-        if (atomId.compareAndSet(preGenerateMaxId, atomId.incrementAndGet())) {
-            IDEntity entity = new IDEntity();
-            entity.generatedId = atomId.get();
-            entity.name = name;
-            entity.time = System.nanoTime();
-            idRepository.save(entity);
-
+        if (!atomId.compareAndSet(preGenerateMaxId, atomId.incrementAndGet())) {
             return atomId.get();
         }
-
         //否则再去向缓存预取
-        Long curMaxId = 0l;
-        if (cacheService.containName(name)) {
-            curMaxId = cacheService.get(name);
-        }
-        preGenerateMaxId = curMaxId + STEP;
-        cacheService.put(name, preGenerateMaxId);
-
-        IDEntity entity = new IDEntity();
-        entity.generatedId = atomId.get();
-        entity.name = name;
-        entity.time = System.nanoTime();
-        idRepository.save(entity);
-
-        return atomId.get();
+        preGenerateMaxId = cacheService.atomAddAndGet(name, STEP);
+        return atomId.incrementAndGet();
     }
 
 
