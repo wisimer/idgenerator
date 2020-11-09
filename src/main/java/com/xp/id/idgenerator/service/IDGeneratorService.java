@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 @Service
 public class IDGeneratorService {
@@ -22,21 +23,32 @@ public class IDGeneratorService {
     @Autowired
     IDRepository idRepository;
 
-    private AtomicLong atomId = new AtomicLong(0);
     /**
      * 预取ID的最大值
      */
     private Long preGenerateMaxId = 1l;
     private Logger logger = LoggerFactory.getLogger(IDGeneratorService.class);
 
+    private ConcurrentHashMap<String, AtomicLong> cache = new ConcurrentHashMap<>();
+
     public synchronized long generator(String name) {
-        //如果没有达到预取的最大值，直接使用atomic加1
-        if (!atomId.compareAndSet(preGenerateMaxId, atomId.incrementAndGet())) {
-            return atomId.get();
+
+        if (cache.containsKey(name)) {
+            //如果没有达到预取的最大值，直接使用atomic加1
+            if (!cache.get(name).compareAndSet(preGenerateMaxId, cache.get(name).incrementAndGet())) {
+                return cache.get(name).get();
+            } else {
+                //否则再去向缓存预取
+                preGenerateMaxId = cacheService.atomAddAndGet(name, STEP);
+                return cache.get(name).incrementAndGet();
+            }
+
+        } else {
+            cache.put(name, new AtomicLong(1));
+            preGenerateMaxId = cacheService.atomAddAndGet(name, STEP);
+            return 1;
         }
-        //否则再去向缓存预取
-        preGenerateMaxId = cacheService.atomAddAndGet(name, STEP);
-        return atomId.incrementAndGet();
+
     }
 
 
