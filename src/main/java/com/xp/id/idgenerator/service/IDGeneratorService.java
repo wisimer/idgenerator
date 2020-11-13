@@ -26,7 +26,7 @@ public class IDGeneratorService {
     /**
      * 预取ID的最大值
      */
-    private Long preGenerateMaxId = 1l;
+    private ConcurrentHashMap<String, Long> preGenerateMaxIds = new ConcurrentHashMap<>();
     private Logger logger = LoggerFactory.getLogger(IDGeneratorService.class);
 
     private ConcurrentHashMap<String, AtomicLong> cache = new ConcurrentHashMap<>();
@@ -35,17 +35,19 @@ public class IDGeneratorService {
 
         if (cache.containsKey(name)) {
             //如果没有达到预取的最大值，直接使用atomic加1
-            if (!cache.get(name).compareAndSet(preGenerateMaxId, cache.get(name).incrementAndGet())) {
+            if (!cache.get(name).compareAndSet(preGenerateMaxIds.get(name), cache.get(name).incrementAndGet())) {
                 return cache.get(name).get();
             } else {
                 //否则再去向缓存预取
-                preGenerateMaxId = cacheService.atomAddAndGet(name, STEP);
+                long maxId = cacheService.atomAddAndGet(name, STEP);
+                preGenerateMaxIds.put(name, maxId);
                 return cache.get(name).incrementAndGet();
             }
 
         } else {
             cache.put(name, new AtomicLong(1));
-            preGenerateMaxId = cacheService.atomAddAndGet(name, STEP);
+            long maxId = cacheService.atomAddAndGet(name, STEP);
+            preGenerateMaxIds.put(name, maxId);
             return 1;
         }
 
