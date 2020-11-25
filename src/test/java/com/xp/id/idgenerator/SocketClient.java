@@ -20,7 +20,7 @@ public class SocketClient {
     }
 
     void testSocket() throws Throwable {
-        NioClient client = new NioClient("127.0.0.1", 8081);
+        NioClient client = new NioClient("127.0.0.1", 8073);
         client.setChannelHandler((sc) -> {
             ByteBuffer readBuffer = ByteBuffer.allocate(1024);
             //从channel读数据到缓冲区

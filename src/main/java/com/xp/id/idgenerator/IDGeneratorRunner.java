@@ -33,7 +33,7 @@ public class IDGeneratorRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        NioServer server = new NioServer(8081);
+        NioServer server = new NioServer(8073);
         server.setChannelHandler((sc) -> {
             ByteBuffer readBuffer = ByteBuffer.allocate(1024);
             try {

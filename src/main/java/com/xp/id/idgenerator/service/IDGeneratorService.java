@@ -1,7 +1,5 @@
 package com.xp.id.idgenerator.service;
 
-import com.xp.id.idgenerator.entity.IDEntity;
-import com.xp.id.idgenerator.repository.IDRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +18,6 @@ public class IDGeneratorService {
     public static final boolean SALT = false;
     @Autowired
     RedisCacheService cacheService;
-    @Autowired
-    IDRepository idRepository;
 
     /**
      * 预取ID的最大值
