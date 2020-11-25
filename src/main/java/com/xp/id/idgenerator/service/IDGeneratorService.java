@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,7 +16,7 @@ public class IDGeneratorService {
     public static final int STEP = 1000;
     public static final boolean SALT = false;
     @Autowired
-    RedisCacheService cacheService;
+    JedisCacheService cacheService;
 
     /**
      * 预取ID的最大值

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.xp.id'
-version = '0.0.3'
+version = '0.0.4'
 sourceCompatibility = '8'
 
 configurations {
@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
 //    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+//    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 //    implementation 'org.springframework.boot:spring-boot-starter-data-rest'
 //    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
