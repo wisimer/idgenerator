@@ -2,7 +2,7 @@
 # 地址，默认localhost  redis-cli -h 172.16.18.179 -p 6660 -a 'zcache0:seq/WctCode@2020' -n 17
 host = 172.16.18.179
 # 端口，默认6379
-port = 6379
+port = 6660
 # 超时，默认2000
 timeout = 2000
 # 连接超时，默认timeout
