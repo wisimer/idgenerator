@@ -6,3 +6,7 @@
 例如客户端请求名称为order的id，全局序列服务先从本地可分配区间cache中查找order的最新可分配id，cache是一个ConcurrentHashMap<String, AtomicLong>的数据结构，key是序列名称，value是该序列的最新id。
 每次分配一个id之后value+1。preGenerateMaxIds是一个ConcurrentHashMap<String, Long>的数据结构，里面保存了全局序列服务本地可为order分配的最大id，如果当前id小于等于这个最大id，那么直接返回最新id即可。
 否则，在Redis中获取order对应的value，并在这个value基础上加1000，表示全局序列服务本地可为order分配的最大id新增了1000个。
+
+- - -
+
+SOCKET : 8081

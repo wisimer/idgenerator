@@ -49,8 +49,6 @@ public class SocketClient {
             String request = scanner.nextLine();
             if (request != null && request.trim().length() > 0) {
                 client.write(BufferUtil.createUtf8(request));
-                client.write(BufferUtil.createUtf8("*2\\r\\n$8\\r\\nSEQUENCE\\r\\n$3\\r\\nKEY\\r\\n"));
-                client.write(BufferUtil.createUtf8("\n"));
 
             }
         }

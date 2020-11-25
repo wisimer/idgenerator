@@ -29,23 +29,25 @@ public class IDGeneratorService {
     private ConcurrentHashMap<String, Long> preGenerateMaxIds = new ConcurrentHashMap<>();
     private Logger logger = LoggerFactory.getLogger(IDGeneratorService.class);
 
-    private ConcurrentHashMap<String, AtomicLong> cache = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Long> cache = new ConcurrentHashMap<>();
 
     public synchronized long generator(String name) {
 
         if (cache.containsKey(name)) {
             //如果没有达到预取的最大值，直接使用atomic加1
-            if (!cache.get(name).compareAndSet(preGenerateMaxIds.get(name), cache.get(name).incrementAndGet())) {
-                return cache.get(name).get();
+            if (cache.get(name) < preGenerateMaxIds.get(name)) {
+                cache.put(name, cache.get(name) + 1);
+                return cache.get(name);
             } else {
                 //否则再去向缓存预取
                 long maxId = cacheService.atomAddAndGet(name, STEP);
                 preGenerateMaxIds.put(name, maxId);
-                return cache.get(name).incrementAndGet();
+                cache.put(name, cache.get(name) + 1);
+                return cache.get(name);
             }
 
         } else {
-            cache.put(name, new AtomicLong(1));
+            cache.put(name, 1l);
             long maxId = cacheService.atomAddAndGet(name, STEP);
             preGenerateMaxIds.put(name, maxId);
             return 1;
