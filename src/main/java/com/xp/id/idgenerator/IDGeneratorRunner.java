@@ -69,6 +69,7 @@ public class IDGeneratorRunner implements CommandLineRunner {
         server.listen();
     }
 
+    String formmater = ":%d\r\n";
     public void doWrite(SocketChannel channel, String cmd) throws Throwable {
         //解析命令: *2\r\n$8\r\nSEQUENCE\r\n$3\r\nKEY\r\n
         String[] arrs = cmd.replace("\\r\\n", " ").split(" "); // *2 $8 SEQUENCE $3
@@ -76,9 +77,9 @@ public class IDGeneratorRunner implements CommandLineRunner {
             String key = arrs[4];
             long id = idGeneratorService.generator(key);
             //将缓冲数据写入渠道，返回给客户端
-            channel.write(BufferUtil.createUtf8(id + ""));
+            channel.write(BufferUtil.createUtf8(String.format(formmater,id)));
         } else {
-            channel.write(BufferUtil.createUtf8("ERROR"));
+            channel.write(BufferUtil.createUtf8("-ERR no id \r\n"));
         }
 
     }
