@@ -73,7 +73,14 @@ public class IDGeneratorRunner implements CommandLineRunner {
     public void doWrite(SocketChannel channel, String cmd) throws Throwable {
         //解析命令: *2\r\n$8\r\nSEQUENCE\r\n$3\r\nKEY\r\n
         if (!StringUtils.isEmpty(cmd)) {
-            if (cmd.equals("*2")) { //第一个命令肯定是*2
+            String[] arrs = cmd.replace("\r\n", " ").split(" "); // *2 $8 SEQUENCE $3
+            Console.log("arrs : "+arrs.length);
+            if ("*2".equalsIgnoreCase(arrs[0]) && "$8".equalsIgnoreCase(arrs[1]) && "sequence".equalsIgnoreCase(arrs[2]) && arrs.length > 4) {
+                String key = arrs[4];
+                long id = idGeneratorService.generator(key);
+                //将缓冲数据写入渠道，返回给客户端
+                channel.write(BufferUtil.createUtf8(String.format(formmater, id)));
+            } else if (cmd.equals("*2")) { //第一个命令肯定是*2
                 cmdList.clear();
                 cmdList.add(cmd);
             } else if (cmd.equals("$8") && cmdList.size() == 1) { // 第二个命令是肯定是$8
