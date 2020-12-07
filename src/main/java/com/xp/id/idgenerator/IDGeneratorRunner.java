@@ -75,7 +75,7 @@ public class IDGeneratorRunner implements CommandLineRunner {
         if (!StringUtils.isEmpty(cmd)) {
             String[] arrs = cmd.replace("\r\n", " ").split(" "); // *2 $8 SEQUENCE $3
             Console.log("arrs : "+arrs.length);
-            if ("*2".equalsIgnoreCase(arrs[0]) && "$8".equalsIgnoreCase(arrs[1]) && "sequence".equalsIgnoreCase(arrs[2]) && arrs.length > 4) {
+            if (arrs != null && arrs.length > 4 && "*2".equalsIgnoreCase(arrs[0]) && "$8".equalsIgnoreCase(arrs[1]) && "sequence".equalsIgnoreCase(arrs[2])) {
                 String key = arrs[4];
                 long id = idGeneratorService.generator(key);
                 //将缓冲数据写入渠道，返回给客户端
