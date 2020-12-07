@@ -14,22 +14,23 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 @Component
 public class IDGeneratorRunner implements CommandLineRunner {
 
     @Autowired
     IDGeneratorService idGeneratorService;
+    String formmater = ":%d\r\n";
+    ArrayList<String> cmdList = new ArrayList<>();
+
+    public static boolean isInteger(String str) {
+        Pattern pattern = Pattern.compile("^[-\\+]?[\\d]*$");
+        return pattern.matcher(str).matches();
+    }
 
     @Override
     public void run(String... args) throws Exception {
@@ -69,19 +70,43 @@ public class IDGeneratorRunner implements CommandLineRunner {
         server.listen();
     }
 
-    String formmater = ":%d\r\n";
     public void doWrite(SocketChannel channel, String cmd) throws Throwable {
         //解析命令: *2\r\n$8\r\nSEQUENCE\r\n$3\r\nKEY\r\n
-        String[] arrs = cmd.replace("\\r\\n", " ").split(" "); // *2 $8 SEQUENCE $3
-        if ("*2".equalsIgnoreCase(arrs[0]) && "$8".equalsIgnoreCase(arrs[1]) && "sequence".equalsIgnoreCase(arrs[2]) && arrs.length > 4) {
-            String key = arrs[4];
-            long id = idGeneratorService.generator(key);
-            //将缓冲数据写入渠道，返回给客户端
-            channel.write(BufferUtil.createUtf8(String.format(formmater,id)));
+        if (!StringUtils.isEmpty(cmd)) {
+            if (cmd.equals("*2")) { //第一个命令肯定是*2
+                cmdList.clear();
+                cmdList.add(cmd);
+            } else if (cmd.equals("$8") && cmdList.size() == 1) { // 第二个命令是肯定是$8
+                cmdList.add(cmd);
+            } else if (cmd.equals("sequence") && cmdList.size() == 2) { //第三个命令肯定是sequence
+                cmdList.add(cmd);
+            } else if (cmd.startsWith("$") && cmdList.size() == 3) { //第四个命令肯定是$开头，跟着一个整数表示seqname的长度
+                String cmdRemain = cmd.substring(1);
+                if (isInteger(cmdRemain)) {
+                    //$后面是整数
+                    cmdList.add(cmd);
+                } else {
+                    //$后面不是整数
+                    cmdList.clear();
+                    channel.write(BufferUtil.createUtf8("-ERR cmd length should be integer \r\n"));
+                }
+            } else if (cmdList.size() == 4) {
+                if (cmd.length() == Integer.valueOf(cmdList.get(cmdList.size() - 1).substring(1))) {
+                    cmdList.add(cmd);
+                    long id = idGeneratorService.generator(cmd);
+                    channel.write(BufferUtil.createUtf8(String.format(formmater, id)));
+                } else {
+                    channel.write(BufferUtil.createUtf8("-ERR seqname length error \r\n"));
+                }
+
+            } else {
+                cmdList.clear();
+                channel.write(BufferUtil.createUtf8("-ERR \r\n"));
+            }
         } else {
+            cmdList.clear();
             channel.write(BufferUtil.createUtf8("-ERR no id \r\n"));
         }
-
     }
 
 

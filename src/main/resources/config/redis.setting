@@ -1,8 +1,8 @@
 #----- 默认（公有）配置
-# 地址，默认localhost  redis-cli -h 172.16.18.179 -p 6660 -a 'zcache0:seq/WctCode@2020' -n 17
-host = 172.16.18.179
-# 端口，默认6379
-port = 6660
+# 地址，默认 localhost  redis-cli -h 172.16.18.179 -p 6660 -a 'zcache0:seq/WctCode@2020' -n 17
+host = 192.168.43.251
+# 端口，默认 6379
+port = 6379
 # 超时，默认2000
 timeout = 2000
 # 连接超时，默认timeout
@@ -10,9 +10,9 @@ connectionTimeout = 2000
 # 读取超时，默认timeout
 soTimeout = 2000
 # 密码，默认无
-password = zcache0:seq/WctCode@2020
+# password = zcache0:seq/WctCode@2020
 # 数据库序号，默认0
-database = 17
+database = 0
 # 客户端名，默认"Hutool"
 clientName = Hutool
 # SSL连接，默认false
