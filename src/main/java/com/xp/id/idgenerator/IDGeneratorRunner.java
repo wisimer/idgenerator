@@ -101,7 +101,11 @@ public class IDGeneratorRunner implements CommandLineRunner {
                 if (cmd.length() == Integer.valueOf(cmdList.get(cmdList.size() - 1).substring(1))) {
                     cmdList.add(cmd);
                     long id = idGeneratorService.generator(cmd);
-                    channel.write(BufferUtil.createUtf8(String.format(formmater, id)));
+                    if (id > 0) {
+                        channel.write(BufferUtil.createUtf8(String.format(formmater, id)));
+                    } else {
+                        channel.write(BufferUtil.createUtf8("-ERR please register seqname before generate id \r\n"));
+                    }
                 } else {
                     channel.write(BufferUtil.createUtf8("-ERR seqname length error \r\n"));
                 }

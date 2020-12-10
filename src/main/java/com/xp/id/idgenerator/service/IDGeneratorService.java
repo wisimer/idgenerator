@@ -48,10 +48,14 @@ public class IDGeneratorService {
 
     /**
      * 保证单纯的自增获取id
+     *
      * @param name
      * @return
      */
     public long generator(String name) {
+        if (!cache.containsKey(name)) {
+            return -1;
+        }
         ID id = cache.get(name);
         if (id.atomicLong.longValue() < id.maxId) {
             return id.atomicLong.incrementAndGet();
@@ -66,9 +70,9 @@ public class IDGeneratorService {
     }
 
     /**
-     * @deprecated
      * @param name
      * @return
+     * @deprecated
      */
     public long generate(String name) {
 
