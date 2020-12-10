@@ -34,8 +34,8 @@ public class IDGeneratorService {
             return cache.get(name);
         } else {
             long maxId = cacheService.atomAddAndGet(name, STEP);
-            preGenerateMaxIds.put(name, maxId+1);
-            cache.put(name, maxId + 1);
+            preGenerateMaxIds.put(name, maxId);
+            cache.put(name, maxId-STEP+1);
             return cache.get(name);
         }
 
