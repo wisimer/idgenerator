@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.LongAdder;
 
 @Service
 public class IDGeneratorService {
-    public static final int STEP = 1000;
+    public static final int STEP = 100000;
     public static final boolean SALT = false;
     @Autowired
     JedisCacheService cacheService;
@@ -28,24 +28,15 @@ public class IDGeneratorService {
 
     public synchronized long generator(String name) {
 
-        if (cache.containsKey(name)) {
+        if (cache.containsKey(name) && cache.get(name) < preGenerateMaxIds.get(name)) {
             //如果没有达到预取的最大值，直接使用atomic加1
-            if (cache.get(name) < preGenerateMaxIds.get(name)) {
-                cache.put(name, cache.get(name) + 1);
-                return cache.get(name);
-            } else {
-                //否则再去向缓存预取
-                long maxId = cacheService.atomAddAndGet(name, STEP);
-                preGenerateMaxIds.put(name, maxId);
-                cache.put(name, cache.get(name) + 1);
-                return cache.get(name);
-            }
-
+            cache.put(name, cache.get(name) + 1);
+            return cache.get(name);
         } else {
-            cache.put(name, 1l);
             long maxId = cacheService.atomAddAndGet(name, STEP);
-            preGenerateMaxIds.put(name, maxId);
-            return 1;
+            preGenerateMaxIds.put(name, maxId+1);
+            cache.put(name, maxId + 1);
+            return cache.get(name);
         }
 
     }
