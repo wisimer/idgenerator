@@ -1,16 +1,21 @@
 package com.xp.id.idgenerator.service;
 
+import cn.hutool.db.nosql.redis.RedisDS;
 import com.xp.id.idgenerator.entity.ID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Service;
+import redis.clients.jedis.ScanParams;
 
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
-public class IDGeneratorService {
+public class IDGeneratorService implements ApplicationListener<ContextRefreshedEvent> {
     public static final int STEP = 100000;
     public static final boolean SALT = false;
     @Autowired
@@ -33,17 +38,22 @@ public class IDGeneratorService {
         if (!cache.containsKey(name)) {
             synchronized (cache) {
                 if (!cache.containsKey(name)) {
-                    long maxId = cacheService.atomAddAndGet(name, STEP);
-                    AtomicLong atomicLong = new AtomicLong(maxId - STEP);
                     ID id = new ID();
+                    AtomicLong atomicLong = new AtomicLong();
                     id.atomicLong = atomicLong;
-                    id.maxId = maxId;
-                    cache.put(name, id);
+                    initSeqName(name, id);
                 }
             }
 
         }
         return true;
+    }
+
+    public void initSeqName(String name, ID id) {
+        long maxId = cacheService.atomAddAndGet(name, STEP);
+        id.atomicLong.set(maxId - STEP);
+        id.maxId = maxId;
+        cache.put(name, id);
     }
 
     /**
@@ -52,7 +62,7 @@ public class IDGeneratorService {
      * @param name
      * @return
      */
-    public long generator(String name) {
+    public long generate(String name) {
         if (!cache.containsKey(name)) {
             return -1;
         }
@@ -61,10 +71,8 @@ public class IDGeneratorService {
             return id.atomicLong.incrementAndGet();
         } else {
             synchronized (id) {
-                long maxid = cacheService.atomAddAndGet(name, STEP);
-                id.maxId = maxid;
-                id.atomicLong.set(maxid - STEP + 1);
-                return id.atomicLong.longValue();
+                initSeqName(name, id);
+                return id.atomicLong.incrementAndGet();
             }
         }
     }
@@ -74,21 +82,17 @@ public class IDGeneratorService {
      * @return
      * @deprecated
      */
-    public long generate(String name) {
+    public long generator(String name) {
 
         if (!cache.containsKey(name)) {
             synchronized (cache) {
                 if (!cache.containsKey(name)) {
-                    long maxId = cacheService.atomAddAndGet(name, STEP);
-                    AtomicLong atomicLong = new AtomicLong(maxId - STEP + 1);
                     ID id = new ID();
+                    AtomicLong atomicLong = new AtomicLong();
                     id.atomicLong = atomicLong;
-                    id.maxId = maxId;
-                    cache.put(name, id);
-                    return cache.get(name).atomicLong.longValue();
-                } else {
-                    return cache.get(name).atomicLong.incrementAndGet();
+                    initSeqName(name, id);
                 }
+                return cache.get(name).atomicLong.incrementAndGet();
             }
         } else {
             ID id = cache.get(name);
@@ -106,4 +110,18 @@ public class IDGeneratorService {
         }
     }
 
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        // 游标初始值为0
+        String cursor = ScanParams.SCAN_POINTER_START;
+        String key = "*";
+        Set<String> scanResult = RedisDS.create().getJedis().keys(key);
+        for (String s : scanResult) {
+            ID id = new ID();
+            AtomicLong atomicLong = new AtomicLong();
+            id.atomicLong = atomicLong;
+            initSeqName(s, id);
+        }
+
+    }
 }

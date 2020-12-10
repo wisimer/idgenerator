@@ -4,6 +4,8 @@ import cn.hutool.db.nosql.redis.RedisDS;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
+import java.util.HashMap;
+
 @Service
 public class JedisCacheService implements ICacheService {
 
@@ -25,4 +27,5 @@ public class JedisCacheService implements ICacheService {
     public long get(String name) {
         return Long.valueOf( RedisDS.create().getJedis().get(name));
     }
+
 }
