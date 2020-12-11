@@ -120,7 +120,12 @@ public class IDGeneratorService implements ApplicationListener<ContextRefreshedE
             ID id = new ID();
             AtomicLong atomicLong = new AtomicLong();
             id.atomicLong = atomicLong;
-            initSeqName(s, id);
+
+            try {
+                initSeqName(s, id);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
     }
